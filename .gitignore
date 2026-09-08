@@ -1,2 +1,4 @@
 *.log
 alertas.txt
+venv/
+.vscode/
