@@ -2,3 +2,4 @@
 alertas.txt
 venv/
 .vscode/
+__pycache__/
