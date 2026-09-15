@@ -1,0 +1,8 @@
+services:
+      api-seguridad:
+        build: .
+        container_name: contenedor-seguridad
+        ports:
+          - "8000:8000"
+        restart: always
+        
