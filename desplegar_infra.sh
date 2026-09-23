@@ -11,25 +11,34 @@
       --subnet-name snet-backend \
       --subnet-prefix 10.0.1.0/24
     
-    echo "📦 3/4: Creando Azure Container Registry (ACR)..."
+    echo "📦 3/5: Creando Azure Container Registry (ACR)..."
     az acr create \
       --resource-group rg-seguridad-dev \
       --name acrseguridadgaston \
       --sku Basic \
       --admin-enabled true
     
-    echo "🏷️ Subiendo imagen de Docker a la nube..."
-    az acr login --name acrseguridadgaston
-    docker tag api-seguridad:latest acrseguridadgaston.azurecr.io/api-seguridad:v1
-    docker push acrseguridadgaston.azurecr.io/api-seguridad:v1
+    echo "🔐 4/5: Asegurando Azure Key Vault y obteniendo secreto..."
+    az keyvault create \
+      --name kv-seguridad-gaston \
+      --resource-group rg-seguridad-dev \
+      --location eastus
 
-    echo "☁️ 4/4: Desplegando Contenedor en Azure (ACI)..."
+    API_TOKEN=$(az keyvault secret show --vault-name kv-seguridad-gaston --name API-TOKEN --query value -o tsv)
+
+    echo "🏷️ Construyendo y subiendo imagen v2 a la nube..."
+    docker build -t api-seguridad:v2 -t api-seguridad:latest .
+    az acr login --name acrseguridadgaston
+    docker tag api-seguridad:v2 acrseguridadgaston.azurecr.io/api-seguridad:v2
+    docker push acrseguridadgaston.azurecr.io/api-seguridad:v2
+
+    echo "☁️ 5/5: Desplegando Contenedor Seguro en Azure (ACI)..."
     ACR_PASS=$(az acr credential show --name acrseguridadgaston --query "passwords[0].value" -o tsv)
 
     az container create \
       --resource-group rg-seguridad-dev \
       --name api-seguridad-cloud \
-      --image acrseguridadgaston.azurecr.io/api-seguridad:v1 \
+      --image acrseguridadgaston.azurecr.io/api-seguridad:v2 \
       --os-type Linux \
       --cpu 1 \
       --memory 1 \
@@ -37,9 +46,10 @@
       --registry-username acrseguridadgaston \
       --registry-password "$ACR_PASS" \
       --dns-name-label api-seguridad-gaston \
-      --ports 8000
+      --ports 8000 \
+      --secure-environment-variables API_SECRET_TOKEN="$API_TOKEN"
 
-    echo "✅ ¡Infraestructura completa y API desplegada en Azure!"
+    echo "✅ ¡Infraestructura completa y API blindada en Azure!"
     echo "👉 URL: http://api-seguridad-gaston.eastus.azurecontainer.io:8000/docs"
 
     
