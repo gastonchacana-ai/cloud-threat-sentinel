@@ -1,0 +1,49 @@
+name: CI/CD Pipeline - Cloud Security API
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  test:
+    name: Run Automated Tests & Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 📦 Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest httpx
+
+      - name: 🧪 Execute Pytest Suite
+        env:
+          API_SECRET_TOKEN: super-secreto-cloud-2026
+        run: |
+          pytest -v test_api_seguridad.py
+
+  build-docker:
+    name: Build & Verify Docker Container
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🏗️ Build Docker Image
+        run: |
+          docker build -t api-seguridad:ci-test .
