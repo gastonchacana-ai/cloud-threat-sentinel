@@ -57,15 +57,15 @@ flowchart TD
         DockerBuild["Docker Build & Test"]
     end
 
-    Client -->|HTTP GET /amenazas?token=...| NSG
-    Attacker -.->|HTTP GET sin token (401 Unauthorized)| NSG
+    Client -->|"HTTP GET /amenazas?token=..."| NSG
+    Attacker -.->|"HTTP GET sin token (401 Unauthorized)"| NSG
     NSG --> Subnet
     Subnet --> ACI
-    KV -.->|--secure-environment-variables| ACI
-    ACR -->|Pull Imagen v2| ACI
-    Git -->|git push| GHA
+    KV -.->|"--secure-environment-variables"| ACI
+    ACR -->|"Pull Imagen v2"| ACI
+    Git -->|"git push"| GHA
     GHA --> Pytest
-    Pytest -->|Tests OK ✅| DockerBuild
+    Pytest -->|"Tests OK ✅"| DockerBuild
 ```
 
 ---
